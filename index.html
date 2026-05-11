@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSC 产品分类代码查询工具</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;background:#f5f7fa;color:#2d3748;min-height:100vh;line-height:1.6}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#2c5282 100%);color:#fff;padding:32px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.header h1{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:.5px}
+.header p{font-size:15px;opacity:.9}
+.container{max-width:900px;margin:0 auto;padding:28px 20px}
+
+/* Query Builder Section */
+.builder-card{background:#fff;border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+.builder-title{font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.builder-title .icon{font-size:22px}
+.builder-desc{font-size:14px;color:#5a6c7d;margin-bottom:20px;background:#f8fafc;padding:12px 16px;border-radius:10px;border-left:4px solid #2c5282}
+.prod-card{border:1px solid #e8ecf0;border-radius:12px;padding:18px;margin-bottom:12px;background:#fff;transition:all .2s}
+.prod-card:hover{border-color:#c3d4e8;box-shadow:0 2px 12px rgba(44,82,130,.06)}
+.prod-card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.prod-num{width:30px;height:30px;background:#2c5282;color:#fff;font-weight:800;font-size:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prod-name-input{flex:1;padding:10px 14px;font-size:15px;font-weight:500;border:1px solid #dce3ea;border-radius:10px;outline:none;transition:all .2s}
+.prod-name-input:focus{border-color:#2c5282;box-shadow:0 0 0 3px rgba(44,82,130,.1)}
+.prod-name-input::placeholder{color:#a0aec0;font-weight:400}
+.btn-del-prod{width:34px;height:34px;border:none;background:#fef2f2;color:#ef4444;border-radius:10px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.btn-del-prod:hover{background:#ef4444;color:#fff}
+.mat-row{display:flex;flex-wrap:wrap;gap:8px;padding-left:42px}
+.mat-tag{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:6px 12px;font-size:13px;color:#166534;font-weight:500}
+.mat-tag input{background:none;border:none;outline:none;font-size:13px;color:#166534;font-weight:500;width:90px}
+.mat-tag input::placeholder{color:#86efac}
+.mat-tag .del{color:#86efac;cursor:pointer;font-size:18px;line-height:1;padding:0 2px}
+.mat-tag .del:hover{color:#ef4444}
+.btn-add-mat2{font-size:13px;color:#5a6c7d;background:#f8fafc;border:1px dashed #c3d4e8;border-radius:10px;padding:8px 16px;cursor:pointer;font-weight:500;transition:all .2s;margin-left:42px}
+.btn-add-mat2:hover{border-color:#2c5282;color:#2c5282;background:#f0f4f8}
+.builder-actions{display:flex;gap:12px;margin-top:20px}
+.btn-query{background:linear-gradient(135deg,#2c5282,#1e3a5f);color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(44,82,130,.25)}
+.btn-query:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(44,82,130,.35)}
+.btn-query:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-clear{background:#fff;color:#5a6c7d;border:1px solid #dce3ea;border-radius:12px;padding:14px 24px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-clear:hover{background:#f8fafc;border-color:#c3d4e8}
+
+/* Results Section */
+.results-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.results-header h3{font-size:18px;font-weight:700;color:#1e3a5f;display:flex;align-items:center;gap:10px}
+.results-actions{display:flex;gap:10px}
+.btn-copy,.btn-export{font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;cursor:pointer;transition:all .2s}
+.btn-copy{background:#f0f4f8;color:#2c5282;border:1px solid #c3d4e8}
+.btn-copy:hover{background:#2c5282;color:#fff;border-color:#2c5282}
+.btn-export{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.btn-export:hover{background:#166534;color:#fff;border-color:#166534}
+.btn-copy.copied{background:#166534;color:#fff;border-color:#166534}
+.summary-bar{background:#f0f4f8;border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;gap:24px;flex-wrap:wrap;font-size:14px;color:#2c5282;font-weight:600}
+.summary-bar span{display:flex;align-items:center;gap:8px}
+.empty-state{text-align:center;padding:48px 20px;color:#a0aec0}
+.empty-state .icon{font-size:48px;margin-bottom:16px}
+.empty-state h3{font-size:18px;color:#718096;margin-bottom:8px}
+.empty-state p{font-size:14px}
+.result-list{display:flex;flex-direction:column;gap:12px}
+.result-prod-group{border:1px solid #e8ecf0;border-radius:12px;overflow:hidden;animation:fadeIn .3s ease}
+.result-prod-header{display:flex;align-items:center;padding:14px 18px;background:#f8fafc;border-bottom:1px solid #e8ecf0;gap:12px}
+.result-prod-num{width:28px;height:28px;background:#2c5282;color:#fff;font-weight:800;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.result-prod-name{font-size:15px;font-weight:700;color:#2d3748;flex:1}
+.result-mat-rows{padding:12px 18px}
+.result-mat-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed #e8ecf0}
+.result-mat-row:last-child{border-bottom:none}
+.result-mat-name{font-size:14px;font-weight:600;color:#4a5568;min-width:100px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.result-arrow{color:#a0aec0;font-size:14px}
+.result-match-tags{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.match-tag{display:inline-flex;align-items:center;gap:5px;background:#f0f4f8;border:1px solid #c3d4e8;border-radius:8px;padding:4px 10px;font-size:13px}
+.match-code{font-weight:800;color:#2c5282;font-family:"SF Mono",Monaco,Consolas,monospace;font-size:14px}
+.match-name{color:#4a5568}
+.match-score{font-size:11px;color:#a0aec0;padding:2px 6px;border-radius:4px}
+.match-score.exact{color:#166534;background:#f0fdf4}
+.match-score.related{color:#b45309;background:#fffbeb}
+.match-score.fuzzy{color:#6b7280;background:#f3f4f6}
+.no-match-tag{font-size:13px;color:#a0aec0;font-style:italic}
+
+/* Search Section */
+.search-section{background:#fff;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+.search-section h3{font-size:16px;font-weight:700;color:#4a5568;margin-bottom:14px}
+.search-box{position:relative}
+.search-box input{width:100%;padding:14px 18px 14px 48px;font-size:15px;border:1px solid #dce3ea;border-radius:12px;outline:none;transition:all .2s;background:#fff}
+.search-box input:focus{border-color:#2c5282;box-shadow:0 0 0 3px rgba(44,82,130,.1)}
+.search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:#a0aec0;font-size:18px}
+.search-stats{font-size:13px;color:#718096;margin-top:10px}
+
+/* Toast */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);background:#1e3a5f;color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;transition:transform .3s ease;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){
+  .header h1{font-size:22px}.container{padding:16px 12px}
+  .mat-row{padding-left:0}
+  .btn-add-mat2{margin-left:0}
+  .result-mat-row{flex-wrap:wrap}
+  .result-mat-name{max-width:100%}
+  .builder-actions{flex-direction:column}
+  .btn-query,.btn-clear{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>FSC 产品分类代码查询工具</h1>
+<p>基于 FSC-STD-40-004a V2-1 EN 标准 · 支持批量产品与原材料分类代码匹配</p>
+</div>
+<div class="container">
+
+<!-- Query Builder -->
+<div class="builder-card">
+<div class="builder-title">
+<span class="icon">&#128203;</span>
+批量查询构建器
+</div>
+<div class="builder-desc">
+输入产品名称及对应原材料，系统将自动匹配 FSC 分类代码。支持批量添加多个产品，每个产品支持多种原材料。
+</div>
+<div id="productList"></div>
+<button class="btn-add-mat2" id="btnAddProduct" onclick="addProduct()">+ 添加产品</button>
+<div class="builder-actions">
+<button class="btn-query" id="btnQuery" onclick="doQuery()">&#128269; 查询匹配</button>
+<button class="btn-clear" onclick="clearAll()">清空全部</button>
+</div>
+</div>
+
+<!-- Results -->
+<div class="results-card" id="resultsCard" style="display:none">
+<div class="results-header">
+<h3>&#128203; 匹配结果</h3>
+<div class="results-actions">
+<button class="btn-copy" id="btnCopy" onclick="copyResults()">&#128203; 复制结果</button>
+<button class="btn-export" onclick="exportResults()">&#128190; 导出 Excel</button>
+</div>
+</div>
+<div class="summary-bar" id="summaryBar"></div>
+<div class="result-list" id="resultList"></div>
+</div>
+
+<!-- Search Section -->
+<div class="search-section">
+<div class="builder-title" style="margin-bottom:12px">
+<span class="icon">&#128269;</span> FSC 分类代码库检索
+</div>
+<div class="search-box">
+<span class="search-icon">&#128269;</span>
+<input type="text" id="searchInput" placeholder="输入产品名称或分类代码进行搜索..." oninput="doSearch()">
+</div>
+<div class="search-stats" id="searchStats"></div>
+<div class="result-list" id="searchResults" style="margin-top:16px"></div>
+</div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.js"></script>
+<script>
+// ==================== FSC DATA ====================
+const DATA=[
+{code:"W1.1",name:"未加工木材",cat:"W",path:"W1 未加工木材（原木）> 未加工木材",examples:""},
+{code:"W1.2",name:"薪材",cat:"W",path:"W1 未加工木材（原木）> 薪材",examples:""},
+{code:"W1.3",name:"枝桠材",cat:"W",path:"W1 未加工木材（原木）> 枝桠材",examples:""},
+{code:"W2",name:"木炭",cat:"W",path:"W2 木炭",examples:"烧烤炭"},
+{code:"W3.1",name:"木片",cat:"W",path:"W3 木片或颗粒物 > 木片",examples:""},
+{code:"W3.2",name:"木屑",cat:"W",path:"W3 木片或颗粒物 > 木屑",examples:""},
+{code:"W3.3",name:"刨花",cat:"W",path:"W3 木片或颗粒物 > 刨花",examples:""},
+{code:"W3.4",name:"木丝",cat:"W",path:"W3 木片或颗粒物 > 木丝",examples:""},
+{code:"W3.5",name:"木粉",cat:"W",path:"W3 木片或颗粒物 > 木粉",examples:""},
+{code:"W3.6",name:"木屑颗粒",cat:"W",path:"W3 木片或颗粒物 > 木屑颗粒",examples:""},
+{code:"W3.7",name:"木屑型煤",cat:"W",path:"W3 木片或颗粒物 > 木屑型煤",examples:""},
+{code:"W4.1",name:"浸渍的圆木",cat:"W",path:"W4 浸渍/处理过的木材 > 浸渍的圆木",examples:""},
+{code:"W4.2",name:"浸渍铁轨枕木/连接板",cat:"W",path:"W4 浸渍/处理过的木材 > 浸渍铁轨枕木/连接板",examples:""},
+{code:"W4.3.1",name:"处理过的胶合木板",cat:"W",path:"W4 浸渍/处理过的木材 > 处理过的规格材、木料，胶合板 > 处理过的胶合木板",examples:""},
+{code:"W4.3.2",name:"指接材",cat:"W",path:"W4 浸渍/处理过的木材 > 处理过的规格材、木料，胶合板 > 指接材",examples:""},
+{code:"W5.1",name:"背板",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 背板",examples:""},
+{code:"W5.2",name:"实木板",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 实木板",examples:"木芯板，粗切木材，夹芯板，壁芯板"},
+{code:"W5.3",name:"梁",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 梁",examples:""},
+{code:"W5.4",name:"木板",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 木板",examples:""},
+{code:"W5.5",name:"杆桩",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 杆桩",examples:""},
+{code:"W5.6",name:"铁路枕木，未浸渍的",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 铁路枕木，未浸渍的",examples:"铁路枕轨"},
+{code:"W5.7",name:"用于实木复合地板的原材料",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 用于实木复合地板的原材料",examples:"木块，楣，长条"},
+{code:"W5.8",name:"面板和边条",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 面板和边条",examples:""},
+{code:"W5.9",name:"铅笔板",cat:"W",path:"W5 实木制品（锯开的，切开的，去皮的）> 铅笔板",examples:""},
+{code:"W6.1",name:"规格材，成品板材",cat:"W",path:"W6 刨削厂制品 > 规格材，成品板材",examples:""},
+{code:"W6.2",name:"非规格材和木料",cat:"W",path:"W6 刨削厂制品 > 非规格材和木料",examples:""},
+{code:"W6.3",name:"成品板",cat:"W",path:"W6 刨削厂制品 > 成品板",examples:""},
+{code:"W7.1",name:"旋切单板",cat:"W",path:"W7 单板 > 旋切单板",examples:""},
+{code:"W7.2",name:"刨切单板",cat:"W",path:"W7 单板 > 刨切单板",examples:""},
+{code:"W7.3",name:"锯切单板",cat:"W",path:"W7 单板 > 锯切单板",examples:""},
+{code:"W7.4",name:"胶合板条",cat:"W",path:"W7 单板 > 胶合板条",examples:""},
+{code:"W8.1.1",name:"夹芯板",cat:"W",path:"W8 人造板 > 胶合板 > 夹芯板",examples:""},
+{code:"W8.1.2",name:"胶合板",cat:"W",path:"W8 人造板 > 胶合板 > 胶合板",examples:""},
+{code:"W8.2.1",name:"三聚氰胺刨花板",cat:"W",path:"W8 人造板 > 刨花板 > 三聚氰胺刨花板",examples:""},
+{code:"W8.2.2",name:"贴面刨花板",cat:"W",path:"W8 人造板 > 刨花板 > 贴面刨花板",examples:""},
+{code:"W8.2.3",name:"定向刨花板（OSB）",cat:"W",path:"W8 人造板 > 刨花板 > 定向刨花板（OSB）",examples:""},
+{code:"W8.2.4",name:"光面板",cat:"W",path:"W8 人造板 > 刨花板 > 光面板",examples:""},
+{code:"W8.2.5",name:"水泥刨花板",cat:"W",path:"W8 人造板 > 刨花板 > 水泥刨花板",examples:""},
+{code:"W8.2.6",name:"石膏板",cat:"W",path:"W8 人造板 > 刨花板 > 石膏板",examples:""},
+{code:"W8.2.7",name:"硬纸板",cat:"W",path:"W8 人造板 > 刨花板 > 硬纸板",examples:""},
+{code:"W8.2.8",name:"分级刨花板",cat:"W",path:"W8 人造板 > 刨花板 > 分级刨花板",examples:""},
+{code:"W8.3.1",name:"高密度纤维板（HDF）",cat:"W",path:"W8 人造板 > 纤维板 > 高密度纤维板（HDF）",examples:""},
+{code:"W8.3.2",name:"中密度纤维板（MDF）",cat:"W",path:"W8 人造板 > 纤维板 > 中密度纤维板（MDF）",examples:""},
+{code:"W8.3.3",name:"软质纤维板",cat:"W",path:"W8 人造板 > 纤维板 > 软质纤维板",examples:"隔音（绝缘板）"},
+{code:"W8.3.4",name:"中硬度纤维板",cat:"W",path:"W8 人造板 > 纤维板 > 中硬度纤维板",examples:""},
+{code:"W9.1",name:"指接材",cat:"W",path:"W9 科技木 > 指接材",examples:""},
+{code:"W9.2",name:"单板层积材（LVL）",cat:"W",path:"W9 科技木 > 单板层积材",examples:""},
+{code:"W9.3",name:"单板条定向层积材（PSL）",cat:"W",path:"W9 科技木 > 单板条定向层积材（PSL）",examples:""},
+{code:"W9.4",name:"木丝板",cat:"W",path:"W9 科技木 > 木丝板",examples:""},
+{code:"W9.5",name:"实木板",cat:"W",path:"W9 科技木 > 实木板",examples:""},
+{code:"W9.6",name:"胶合板（集成材）",cat:"W",path:"W9 科技木 > 胶合板（集成材）",examples:""},
+{code:"W9.7",name:"窄缘工字梁",cat:"W",path:"W9 科技木 > 窄缘工字梁",examples:""},
+{code:"W9.8",name:"层压木",cat:"W",path:"W9 科技木 > 层压木",examples:"胶合板，强化板"},
+{code:"W9.9",name:"复合板",cat:"W",path:"W9 科技木 > 复合板",examples:"蜂窝板"},
+{code:"W9.10",name:"压缩木板",cat:"W",path:"W9 科技木 > 压缩木板",examples:"树脂处理压缩木，热稳定压缩木材"},
+{code:"W9.11",name:"木塑复合材料",cat:"W",path:"W9 科技木 > 木塑复合材料",examples:""},
+{code:"W10.1",name:"实木包装",cat:"W",path:"W10 木质包装及类似物 > 实木包装",examples:"箱子，盒子，板条箱，首饰盒或餐具盒"},
+{code:"W10.2",name:"电缆卷筒",cat:"W",path:"W10 木质包装及类似物 > 电缆卷筒",examples:""},
+{code:"W10.3",name:"托盘和垫木",cat:"W",path:"W10 木质包装及类似物 > 托盘和垫木",examples:""},
+{code:"W10.4",name:"木质箍桶",cat:"W",path:"W10 木质包装及类似物 > 木质箍桶",examples:"桶板，琵琶桶、缸，盆"},
+{code:"W10.5",name:"集装箱地板",cat:"W",path:"W10 木质包装及类似物 > 集装箱地板",examples:""},
+{code:"W11.1",name:"门及门框",cat:"W",path:"W11 建筑材料 > 门及门框",examples:"平面门，防火门"},
+{code:"W11.2",name:"窗及窗框",cat:"W",path:"W11 建筑材料 > 窗及窗框",examples:""},
+{code:"W11.3",name:"楼梯",cat:"W",path:"W11 建筑材料 > 楼梯",examples:""},
+{code:"W11.4",name:"隔板",cat:"W",path:"W11 建筑材料 > 隔板",examples:""},
+{code:"W11.5.1",name:"强化木地板",cat:"W",path:"W11 建筑材料 > 地板 > 强化木地板",examples:""},
+{code:"W11.5.2",name:"拼花地板",cat:"W",path:"W11 建筑材料 > 地板 > 拼花地板",examples:"组装镶木地板，块拼花地板"},
+{code:"W11.5.3",name:"木板地板",cat:"W",path:"W11 建筑材料 > 地板 > 木板地板",examples:""},
+{code:"W11.5.4",name:"拼块地板",cat:"W",path:"W11 建筑材料 > 地板 > 拼块地板",examples:""},
+{code:"W11.5.5",name:"实木复合地板",cat:"W",path:"W11 建筑材料 > 地板 > 实木复合地板",examples:""},
+{code:"W11.6",name:"车库门",cat:"W",path:"W11 建筑材料 > 车库门",examples:""},
+{code:"W11.7",name:"墙面覆盖层",cat:"W",path:"W11 建筑材料 > 墙面覆盖层",examples:""},
+{code:"W11.8",name:"模具",cat:"W",path:"W11 建筑材料 > 模具",examples:"中密度纤维板模具，软模具"},
+{code:"W11.9",name:"热水浴盆和桑拿房",cat:"W",path:"W11 建筑材料 > 热水浴盆和桑拿房",examples:""},
+{code:"W11.10",name:"木绝缘",cat:"W",path:"W11 建筑材料 > 木绝缘",examples:""},
+{code:"W11.11",name:"遮光帘、百叶窗等",cat:"W",path:"W11 建筑材料 > 遮光帘、百叶窗等",examples:""},
+{code:"W11.12",name:"房屋和建筑成分",cat:"W",path:"W11 建筑材料 > 房屋和建筑成分",examples:"预制的立面建筑元素"},
+{code:"W11.13",name:"海洋建筑物，不含船",cat:"W",path:"W11 建筑材料 > 海洋建筑物，不含船",examples:""},
+{code:"W11.14",name:"桁架和屋顶",cat:"W",path:"W11 建筑材料 > 桁架和屋顶",examples:""},
+{code:"W11.15",name:"屋顶瓦",cat:"W",path:"W11 建筑材料 > 屋顶瓦",examples:"木瓦片，盖屋板"},
+{code:"W12.1",name:"橱柜",cat:"W",path:"W12 室内家具 > 橱柜",examples:""},
+{code:"W12.2",name:"定制家具",cat:"W",path:"W12 室内家具 > 定制家具",examples:"定制橱柜，内置的办公桌，台柜等"},
+{code:"W12.3",name:"桌子",cat:"W",path:"W12 室内家具 > 桌子",examples:""},
+{code:"W12.4",name:"床",cat:"W",path:"W12 室内家具 > 床",examples:""},
+{code:"W12.5",name:"沙发和扶手椅",cat:"W",path:"W12 室内家具 > 沙发和扶手椅",examples:""},
+{code:"W12.6",name:"椅子和凳子",cat:"W",path:"W12 室内家具 > 椅子和凳子",examples:""},
+{code:"W12.7",name:"办公家具",cat:"W",path:"W12 室内家具 > 办公家具",examples:""},
+{code:"W12.8",name:"公共设施家具",cat:"W",path:"W12 室内家具 > 公共设施家具",examples:"实验室，学校，医院的家具"},
+{code:"W12.9",name:"衣柜",cat:"W",path:"W12 室内家具 > 衣柜",examples:""},
+{code:"W12.10",name:"碗柜和床头柜",cat:"W",path:"W12 室内家具 > 碗柜和床头柜",examples:""},
+{code:"W12.11",name:"厨房台面",cat:"W",path:"W12 室内家具 > 厨房台面",examples:""},
+{code:"W12.12",name:"家具配件",cat:"W",path:"W12 室内家具 > 家具配件",examples:""},
+{code:"W12.13",name:"架子",cat:"W",path:"W12 室内家具 > 架子",examples:""},
+{code:"W13.1.1",name:"园艺桌",cat:"W",path:"W13 户外家具，园艺 > 花园家具 > 园艺桌",examples:""},
+{code:"W13.1.2",name:"园艺长凳",cat:"W",path:"W13 户外家具，园艺 > 花园家具 > 园艺长凳",examples:""},
+{code:"W13.1.3",name:"花园椅子和凳子",cat:"W",path:"W13 户外家具，园艺 > 花园家具 > 花园椅子和凳子",examples:""},
+{code:"W13.1.4",name:"吊床和吊床架",cat:"W",path:"W13 户外家具，园艺 > 花园家具 > 吊床和吊床架",examples:""},
+{code:"W13.2",name:"花架和植物支架",cat:"W",path:"W13 户外家具，园艺 > 花架和植物支架",examples:""},
+{code:"W13.3",name:"庇护所和遮阳伞",cat:"W",path:"W13 户外家具，园艺 > 庇护所和遮阳伞",examples:"凉亭"},
+{code:"W13.4",name:"篱笆、篱笆桩、尖木桩",cat:"W",path:"W13 户外家具，园艺 > 篱笆、篱笆桩、尖木桩",examples:""},
+{code:"W13.5",name:"甲板和园艺木地板",cat:"W",path:"W13 户外家具，园艺 > 甲板和园艺木地板",examples:""},
+{code:"W13.6",name:"花园棚",cat:"W",path:"W13 户外家具，园艺 > 花园棚",examples:""},
+{code:"W13.7",name:"其他家具和园艺产品",cat:"W",path:"W13 户外家具，园艺 > 其他家具和园艺产品",examples:"花坛，栅栏，户外设备储存木箱"},
+{code:"W14.1",name:"弦乐器",cat:"W",path:"W14 乐器 > 弦乐器",examples:"小提琴，吉他，竖琴"},
+{code:"W14.2",name:"键盘乐器",cat:"W",path:"W14 乐器 > 键盘乐器",examples:"钢琴，风琴"},
+{code:"W14.3",name:"鼓风或口吹乐器",cat:"W",path:"W14 乐器 > 鼓风或口吹乐器",examples:"单簧管，双簧管，大管"},
+{code:"W14.4",name:"打击乐器",cat:"W",path:"W14 乐器 > 打击乐器",examples:"鼓，手鼓"},
+{code:"W14.5",name:"乐器配件",cat:"W",path:"W14 乐器 > 乐器配件",examples:"吉他琴颈"},
+{code:"W15.1",name:"游乐场设备",cat:"W",path:"W15 休闲用品 > 游乐场设备",examples:"旋转木马，秋千，滑梯，电缆铁路，棚和类似物"},
+{code:"W15.2",name:"玩具和游戏用木材",cat:"W",path:"W15 休闲用品 > 玩具和游戏用木材",examples:""},
+{code:"W15.3.1",name:"自行车",cat:"W",path:"W15 休闲用品 > 体育用品 > 自行车",examples:""},
+{code:"W15.3.2",name:"球棒，棍子，杆和浆",cat:"W",path:"W15 休闲用品 > 体育用品 > 球棒，棍子，杆和浆",examples:""},
+{code:"W15.3.3",name:"板和滑雪板",cat:"W",path:"W15 休闲用品 > 体育用品 > 板和滑雪板",examples:""},
+{code:"W15.3.4",name:"其他体育用品",cat:"W",path:"W15 休闲用品 > 体育用品 > 其他体育用品",examples:"瑜伽支撑木，木制球"},
+{code:"W16.1",name:"木框",cat:"W",path:"W16 家居用品 > 木框",examples:"画框，相框，镜框"},
+{code:"W16.2",name:"扫帚、刷子和刷柄",cat:"W",path:"W16 家居用品 > 扫帚、刷子和刷柄",examples:"刷体和手柄，梳子"},
+{code:"W16.3",name:"餐具、厨具和类似产品",cat:"W",path:"W16 家居用品 > 餐具、厨具和类似产品",examples:"木制汤匙，筷子，牙签，胡椒研磨器，烤肉架"},
+{code:"W16.4",name:"衣架和衣夹",cat:"W",path:"W16 家居用品 > 衣架和衣夹",examples:""},
+{code:"W16.5",name:"马桶座圈",cat:"W",path:"W16 家居用品 > 马桶座圈",examples:""},
+{code:"W16.6",name:"火柴",cat:"W",path:"W16 家居用品 > 火柴",examples:""},
+{code:"W16.7",name:"捕鼠器",cat:"W",path:"W16 家居用品 > 捕鼠器",examples:""},
+{code:"W16.8",name:"扇子",cat:"W",path:"W16 家居用品 > 扇子",examples:""},
+{code:"W16.9",name:"梯子",cat:"W",path:"W16 家居用品 > 梯子",examples:""},
+{code:"W16.10",name:"洗浴用品和配件",cat:"W",path:"W16 家居用品 > 洗浴用品和配件",examples:"凳子，浴椅，浴缸"},
+{code:"W17.1",name:"笔",cat:"W",path:"W17 木制文具 > 笔",examples:""},
+{code:"W17.2",name:"铅笔",cat:"W",path:"W17 木制文具 > 铅笔",examples:""},
+{code:"W17.3",name:"尺子",cat:"W",path:"W17 木制文具 > 尺子",examples:""},
+{code:"W17.4",name:"邮票，图章",cat:"W",path:"W17 木制文具 > 邮票，图章",examples:""},
+{code:"W18.1",name:"木钉和榫部件",cat:"W",path:"W18 其他木制品 > 木钉和榫部件",examples:""},
+{code:"W18.2",name:"棺材",cat:"W",path:"W18 其他木制品 > 棺材",examples:""},
+{code:"W18.3",name:"木制医疗用品",cat:"W",path:"W18 其他木制品 > 木制医疗用品",examples:"整形产品，假肢，压舌板"},
+{code:"W18.4",name:"工具、工具主体和手柄",cat:"W",path:"W18 其他木制品 > 工具、工具主体和手柄",examples:"锤子，斧头"},
+{code:"W18.5",name:"冰棍/棒棒糖棒",cat:"W",path:"W18 其他木制品 > 冰棍/棒棒糖棒",examples:""},
+{code:"W18.6",name:"首饰",cat:"W",path:"W18 其他木制品 > 首饰",examples:""},
+{code:"W18.7",name:"艺术品",cat:"W",path:"W18 其他木制品 > 艺术品",examples:"木镶嵌，镶嵌木，雕像和类似物"},
+{code:"W18.8",name:"观赏和装饰品",cat:"W",path:"W18 其他木制品 > 观赏和装饰品",examples:""},
+{code:"W18.9",name:"轮子",cat:"W",path:"W18 其他木制品 > 轮子",examples:""},
+{code:"W18.10",name:"船",cat:"W",path:"W18 其他木制品 > 船",examples:"帆船，皮划艇，独木舟"},
+{code:"W18.11",name:"木打火机",cat:"W",path:"W18 其他木制品 > 木打火机",examples:""},
+{code:"W18.12",name:"野生动物和宠物产品",cat:"W",path:"W18 其他木制品 > 野生动物和宠物产品",examples:"巢箱，禽舍"},
+{code:"W19",name:"其他木制品",cat:"W",path:"W19 其他木制品",examples:""},
+{code:"P1.1.1",name:"机械浆，漂白的",cat:"P",path:"P1 纸浆 > 机械纸浆 > 机械浆，漂白的",examples:""},
+{code:"P1.1.2",name:"精磨木浆",cat:"P",path:"P1 纸浆 > 机械纸浆 > 精磨木浆",examples:"盘磨机械浆，预热机械浆，热磨化学机械浆"},
+{code:"P1.2.1",name:"磨木浆",cat:"P",path:"P1 纸浆 > 机械纸浆，未漂白的 > 磨木浆",examples:""},
+{code:"P1.2.2",name:"精磨木浆（未漂白）",cat:"P",path:"P1 纸浆 > 机械纸浆，未漂白的 > 精磨木浆",examples:"盘磨机械浆，预热机械浆，热磨化学机械浆"},
+{code:"P1.3",name:"化学纸浆，漂白的",cat:"P",path:"P1 纸浆 > 化学纸浆，漂白的",examples:""},
+{code:"P1.4",name:"化学纸浆，未漂白的",cat:"P",path:"P1 纸浆 > 化学纸浆，未漂白的",examples:""},
+{code:"P1.5",name:"半化学纸浆，漂白的",cat:"P",path:"P1 纸浆 > 半化学纸浆，漂白的",examples:""},
+{code:"P1.6",name:"半化学纸浆，未漂白的",cat:"P",path:"P1 纸浆 > 半化学纸浆，未漂白的",examples:""},
+{code:"P1.7.1",name:"特种纤维素",cat:"P",path:"P1 纸浆 > 溶解纸浆 > 特种纤维素",examples:"微晶纤维素"},
+{code:"P1.7.2",name:"纤维素衍生物",cat:"P",path:"P1 纸浆 > 溶解纸浆 > 纤维素衍生物",examples:"纤维素醚，纤维素酯，醋酸纤维素，硝化纤维素"},
+{code:"P1.7.3",name:"再生纤维素膜",cat:"P",path:"P1 纸浆 > 溶解纸浆 > 再生纤维素膜",examples:""},
+{code:"P1.7.4",name:"人造纤维和其他合成纤维",cat:"P",path:"P1 纸浆 > 溶解纸浆 > 人造纤维和其他合成纤维",examples:"线，人造纤维丝胶，纺织纤维，纱"},
+{code:"P1.8.1",name:"回收纸浆，脱墨",cat:"P",path:"P1 纸浆 > 回收纸浆 > 回收纸浆，脱墨",examples:""},
+{code:"P1.8.2",name:"回收纸浆，不脱墨",cat:"P",path:"P1 纸浆 > 回收纸浆 > 回收纸浆，不脱墨",examples:""},
+{code:"P2.1.1",name:"涂层纸",cat:"P",path:"P2 纸 > 复印、打印、通讯用纸 > 涂层纸",examples:""},
+{code:"P2.1.2",name:"无涂层纸",cat:"P",path:"P2 纸 > 复印、打印、通讯用纸 > 无涂层纸",examples:""},
+{code:"P2.2",name:"新闻用纸",cat:"P",path:"P2 纸 > 新闻用纸",examples:""},
+{code:"P2.3",name:"包装用纸",cat:"P",path:"P2 纸 > 包装用纸",examples:"纸袋，防油包装纸，牛皮纸，涂布牛皮纸"},
+{code:"P2.4.1",name:"浸渍纸",cat:"P",path:"P2 纸 > 特种纸 > 浸渍纸",examples:""},
+{code:"P2.4.2",name:"照相原纸",cat:"P",path:"P2 纸 > 特种纸 > 照相原纸",examples:""},
+{code:"P2.4.3",name:"热敏纸",cat:"P",path:"P2 纸 > 特种纸 > 热敏纸",examples:"热转印纸"},
+{code:"P2.4.4",name:"半透明纸",cat:"P",path:"P2 纸 > 特种纸 > 半透明纸",examples:""},
+{code:"P2.4.5",name:"复写纸",cat:"P",path:"P2 纸 > 特种纸 > 复写纸",examples:"碳纸，转印纸，酒精复印纸"},
+{code:"P2.4.6",name:"卷烟纸",cat:"P",path:"P2 纸 > 特种纸 > 卷烟纸",examples:""},
+{code:"P2.4.7",name:"滤纸",cat:"P",path:"P2 纸 > 特种纸 > 滤纸",examples:"茶叶袋"},
+{code:"P2.4.8",name:"绉纹纸",cat:"P",path:"P2 纸 > 特种纸 > 绉纹纸",examples:""},
+{code:"P2.4.9",name:"压花、打孔纸",cat:"P",path:"P2 纸 > 特种纸 > 压花、打孔纸",examples:""},
+{code:"P2.4.10",name:"复合纸",cat:"P",path:"P2 纸 > 特种纸 > 复合纸",examples:""},
+{code:"P2.4.11",name:"壁纸底",cat:"P",path:"P2 纸 > 特种纸 > 壁纸底",examples:"非打印墙纸"},
+{code:"P2.4.12",name:"防伪纸",cat:"P",path:"P2 纸 > 特种纸 > 防伪纸",examples:"纸币，代金券，优惠券"},
+{code:"P2.5",name:"手工纸",cat:"P",path:"P2 纸 > 手工纸",examples:"日本报纸/和纸"},
+{code:"P2.6",name:"纸巾",cat:"P",path:"P2 纸 > 纸巾",examples:""},
+{code:"P3.1",name:"不加涂层纸板",cat:"P",path:"P3 纸板 > 不加涂层纸板",examples:""},
+{code:"P3.2",name:"涂层纸板",cat:"P",path:"P3 纸板 > 涂层纸板",examples:"固体漂白板、固体非漂白板、白色衬纸板"},
+{code:"P3.3",name:"压板",cat:"P",path:"P3 纸板 > 压板",examples:""},
+{code:"P3.4.1",name:"高压层压板（HPDL, HPL）",cat:"P",path:"P3 纸板 > 压层纸板 > 高压层压板（HPDL, HPL）",examples:""},
+{code:"P3.4.2",name:"低压层压板（LPL）",cat:"P",path:"P3 纸板 > 压层纸板 > 低压层压板（LPL）",examples:""},
+{code:"P3.4.3",name:"连续压力层压板（CPL）",cat:"P",path:"P3 纸板 > 压层纸板 > 连续压力层压板（CPL）",examples:""},
+{code:"P3.5",name:"金属纸板",cat:"P",path:"P3 纸板 > 金属纸板",examples:"转移金属纸板, 直接金属纸板, 金属膜层压纸板, 铝箔层压纸板"},
+{code:"P3.6",name:"绉纹纸板",cat:"P",path:"P3 纸板 > 绉纹纸板",examples:""},
+{code:"P4.1",name:"挂面纸板或高耐破纸板",cat:"P",path:"P4 瓦楞纸及纸板 > 挂面纸板或高耐破纸板",examples:""},
+{code:"P4.2",name:"瓦楞纸",cat:"P",path:"P4 瓦楞纸及纸板 > 瓦楞纸",examples:""},
+{code:"P4.3",name:"瓦楞纸板",cat:"P",path:"P4 瓦楞纸及纸板 > 瓦楞纸板",examples:""},
+{code:"P5.1",name:"纸板包装",cat:"P",path:"P5 纸类包装 > 纸板包装",examples:"彩盒，礼品盒"},
+{code:"P5.2",name:"瓦楞纸包装",cat:"P",path:"P5 纸类包装 > 瓦楞纸包装",examples:"瓦楞纸箱"},
+{code:"P5.3",name:"纸袋",cat:"P",path:"P5 纸类包装 > 纸袋",examples:"购物袋"},
+{code:"P5.4",name:"食品包装纸",cat:"P",path:"P5 纸类包装 > 食品包装纸",examples:""},
+{code:"P5.5",name:"饮料和液体食物包装盒",cat:"P",path:"P5 纸类包装 > 饮料和液体食物包装盒",examples:""},
+{code:"P5.6",name:"蛋盒及类似产品",cat:"P",path:"P5 纸类包装 > 蛋盒及类似产品",examples:""},
+{code:"P5.7",name:"光盘包装和封面",cat:"P",path:"P5 纸类包装 > 光盘包装和封面",examples:"光碟和DVD封面"},
+{code:"P6.1",name:"清洁纸巾和纸巾",cat:"P",path:"P6 家用卫生纸类产品 > 清洁纸巾和纸巾",examples:"毛巾纸和清洁布"},
+{code:"P6.2",name:"面巾纸和清新纸巾",cat:"P",path:"P6 家用卫生纸类产品 > 面巾纸和清新纸巾",examples:""},
+{code:"P6.3",name:"餐巾纸/餐巾",cat:"P",path:"P6 家用卫生纸类产品 > 餐巾纸/餐巾",examples:""},
+{code:"P6.4",name:"卫生纸/浴室纸巾",cat:"P",path:"P6 家用卫生纸类产品 > 卫生纸/浴室纸巾",examples:""},
+{code:"P6.5",name:"卫生巾、卫生棉条、纸尿裤和类似产品",cat:"P",path:"P6 家用卫生纸类产品 > 卫生巾、卫生棉条、纸尿裤和类似产品",examples:""},
+{code:"P6.6",name:"桌布",cat:"P",path:"P6 家用卫生纸类产品 > 桌布",examples:""},
+{code:"P6.7",name:"餐具",cat:"P",path:"P6 家用卫生纸类产品 > 餐具",examples:"杯子，碟子，托盘"},
+{code:"P6.8",name:"纸浆/纸浆医疗用品",cat:"P",path:"P6 家用卫生纸类产品 > 纸浆/纸浆医疗用品",examples:"耳部棉签，医院罩衣"},
+{code:"P7.1",name:"笔记本",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 笔记本",examples:"练习本"},
+{code:"P7.2",name:"垫子",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 垫子",examples:"信纸"},
+{code:"P7.3",name:"文件夹",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 文件夹",examples:"马尼拉文件夹，公司文件夹"},
+{code:"P7.4",name:"卷筒热敏纸",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 卷筒热敏纸",examples:"收据"},
+{code:"P7.5",name:"明信片和贺卡",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 明信片和贺卡",examples:""},
+{code:"P7.6",name:"信封",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 信封",examples:""},
+{code:"P7.7",name:"背胶纸",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 背胶纸",examples:"便利贴"},
+{code:"P7.8",name:"不干胶标签",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 不干胶标签",examples:"包裹标签"},
+{code:"P7.9",name:"摹写纸",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 摹写纸",examples:""},
+{code:"P7.10",name:"邮票",cat:"P",path:"P7 文具纸（印刷和非印刷的）> 邮票",examples:""},
+{code:"P8.1",name:"书籍",cat:"P",path:"P8 印刷材料 > 书籍",examples:""},
+{code:"P8.2",name:"杂志",cat:"P",path:"P8 印刷材料 > 杂志",examples:""},
+{code:"P8.3",name:"报纸",cat:"P",path:"P8 印刷材料 > 报纸",examples:""},
+{code:"P8.4",name:"广告材料",cat:"P",path:"P8 印刷材料 > 广告材料",examples:"目录，传单，横幅，海报"},
+{code:"P8.5",name:"名片",cat:"P",path:"P8 印刷材料 > 名片",examples:""},
+{code:"P8.6",name:"日历、日记和备忘录",cat:"P",path:"P8 印刷材料 > 日历、日记和备忘录",examples:""},
+{code:"P8.7",name:"纸质玩具和游戏",cat:"P",path:"P8 印刷材料 > 纸质玩具和游戏",examples:"拼图，扑克牌"},
+{code:"P8.8",name:"壁纸",cat:"P",path:"P8 印刷材料 > 壁纸",examples:""},
+{code:"P9",name:"绕线筒, 线轴, 轧辊和类似物品",cat:"P",path:"P9 绕线筒, 线轴, 轧辊和类似物品",examples:""},
+{code:"P10",name:"其他纸浆和纸制品",cat:"P",path:"P10 其他纸浆和纸制品",examples:""},
+{code:"N1",name:"树皮",cat:"N",path:"N1 树皮",examples:""},
+{code:"N2",name:"土壤改良剂和植物基质",cat:"N",path:"N2 土壤改良剂和植物基质",examples:"树皮覆盖物"},
+{code:"N3.1",name:"天然软木塞(未处理或蒸煮处理)",cat:"N",path:"N3 软木和软木制品 > 天然软木塞(未处理或蒸煮处理)",examples:""},
+{code:"N3.2",name:"软木粉",cat:"N",path:"N3 软木和软木制品 > 软木粉",examples:""},
+{code:"N3.3",name:"软木颗粒",cat:"N",path:"N3 软木和软木制品 > 软木颗粒",examples:""},
+{code:"N3.4",name:"软木塞",cat:"N",path:"N3 软木和软木制品 > 软木塞",examples:"天然的，公益的，凝聚软木塞，起泡酒或香槟的软木塞"},
+{code:"N3.5",name:"压缩软木轴和板",cat:"N",path:"N3 软木和软木制品 > 压缩软木轴和板",examples:""},
+{code:"N3.6",name:"软木盘",cat:"N",path:"N3 软木和软木制品 > 软木盘",examples:""},
+{code:"N3.7",name:"软木制品",cat:"N",path:"N3 软木和软木制品 > 软木制品",examples:""},
+{code:"N4.1",name:"藤（原始形状）",cat:"N",path:"N4 装饰物和柳条制品 > 藤（原始形状）",examples:"柳条枝，篮筐，顶板"},
+{code:"N4.2",name:"藤锥（清洁、去皮的）",cat:"N",path:"N4 装饰物和柳条制品 > 藤锥（清洁、去皮的）",examples:""},
+{code:"N4.3",name:"稻草，柳，藤条和类似物",cat:"N",path:"N4 装饰物和柳条制品 > 稻草，柳，藤条和类似物",examples:""},
+{code:"N4.4",name:"藤制家具",cat:"N",path:"N4 装饰物和柳条制品 > 藤制家具",examples:""},
+{code:"N4.5",name:"藤制家具部件",cat:"N",path:"N4 装饰物和柳条制品 > 藤制家具部件",examples:""},
+{code:"N5.1",name:"天然竹",cat:"N",path:"N5 竹子和竹子制品 > 天然竹",examples:""},
+{code:"N5.2",name:"食用竹",cat:"N",path:"N5 竹子和竹子制品 > 食用竹",examples:""},
+{code:"N5.3",name:"燃料竹",cat:"N",path:"N5 竹子和竹子制品 > 燃料竹",examples:"颗粒，炭"},
+{code:"N5.4",name:"竹材胶合板",cat:"N",path:"N5 竹子和竹子制品 > 竹材胶合板",examples:"胶合板和定向刨花板"},
+{code:"N5.5",name:"竹地板",cat:"N",path:"N5 竹子和竹子制品 > 竹地板",examples:""},
+{code:"N5.6",name:"竹家具",cat:"N",path:"N5 竹子和竹子制品 > 竹家具",examples:""},
+{code:"N5.7",name:"竹家居用品、编织物",cat:"N",path:"N5 竹子和竹子制品 > 竹家居用品、编织物",examples:"篮子, 容器, 窗帘, 垫子, 帽子, 梳子, 刷子, 框架"},
+{code:"N5.8",name:"竹纺织品",cat:"N",path:"N5 竹子和竹子制品 > 竹纺织品",examples:""},
+{code:"N5.9",name:"竹醋液",cat:"N",path:"N5 竹子和竹子制品 > 竹醋液",examples:""},
+{code:"N5.10",name:"竹浆",cat:"N",path:"N5 竹子和竹子制品 > 竹浆",examples:""},
+{code:"N6.1",name:"花",cat:"N",path:"N6 植物和植物的一部分 > 花",examples:""},
+{code:"N6.2",name:"禾草、蕨类植物、苔藓和地衣",cat:"N",path:"N6 植物和植物的一部分 > 禾草、蕨类植物、苔藓和地衣",examples:""},
+{code:"N6.3.1",name:"整树和植物",cat:"N",path:"N6 植物和植物的一部分 > 整树和植物 > 整树和植物",examples:""},
+{code:"N6.3.2",name:"圣诞树",cat:"N",path:"N6 植物和植物的一部分 > 整树和植物 > 圣诞树",examples:""},
+{code:"N6.4",name:"松塔",cat:"N",path:"N6 植物和植物的一部分 > 松塔",examples:""},
+{code:"N7.1.1",name:"天然橡胶",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 天然橡胶",examples:""},
+{code:"N7.1.2",name:"轮胎",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 轮胎",examples:""},
+{code:"N7.1.3",name:"球类",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 球类",examples:""},
+{code:"N7.1.4",name:"鞋类",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 鞋类",examples:""},
+{code:"N7.1.5",name:"橡胶泡沫枕头",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 橡胶泡沫枕头",examples:""},
+{code:"N7.1.6",name:"树胶，古塔胶，银胶菊，糖胶树胶",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 树胶，古塔胶，银胶菊，糖胶树胶",examples:""},
+{code:"N7.1.7",name:"其他橡胶制品",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 橡胶/乳胶 > 其他橡胶制品",examples:""},
+{code:"N7.2",name:"树脂",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 树脂",examples:"阿拉伯胶，黄蓍胶，乳香，藤黄，没药"},
+{code:"N7.3",name:"树脂和树脂制品",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 树脂和树脂制品",examples:"达马脂、榄香脂，白松、加拿大香脂、本杰明、沥青漆、护肤品、香"},
+{code:"N7.4",name:"单宁",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 单宁",examples:""},
+{code:"N7.5",name:"精油",cat:"N",path:"N7 天然树胶，树脂，油和衍生物 > 精油",examples:"樟脑, 巴西坚果油, 古巴油"},
+{code:"N8.1",name:"乙醇",cat:"N",path:"N8 化学，医药和化妆品产品 > 乙醇",examples:""},
+{code:"N8.2",name:"药用植物及产品",cat:"N",path:"N8 化学，医药和化妆品产品 > 药用植物及产品",examples:""},
+{code:"N8.3",name:"医药原料",cat:"N",path:"N8 化学，医药和化妆品产品 > 医药原料",examples:"水杨酸、奎宁、紫杉醇、白桦脂酸、马钱子提取物，印楝"},
+{code:"N8.4",name:"化妆品和保健产品",cat:"N",path:"N8 化学，医药和化妆品产品 > 化妆品和保健产品",examples:""},
+{code:"N8.5",name:"木醋",cat:"N",path:"N8 化学，医药和化妆品产品 > 木醋",examples:""},
+{code:"N8.6",name:"醋酸",cat:"N",path:"N8 化学，医药和化妆品产品 > 醋酸",examples:""},
+{code:"N9.1",name:"坚果",cat:"N",path:"N9 食物 > 坚果",examples:"巴西坚果、腰果"},
+{code:"N9.2",name:"茶",cat:"N",path:"N9 食物 > 茶",examples:"马黛茶"},
+{code:"N9.3",name:"棕榈芯",cat:"N",path:"N9 食物 > 棕榈芯",examples:""},
+{code:"N9.4",name:"蘑菇，松露",cat:"N",path:"N9 食物 > 蘑菇，松露",examples:"香菇，松菇"},
+{code:"N9.5",name:"水果",cat:"N",path:"N9 食物 > 水果",examples:"浆果，巴西莓"},
+{code:"N9.6.1",name:"枫树糖浆和糖",cat:"N",path:"N9 食物 > 基于树汁的食物 > 枫树糖浆和糖",examples:""},
+{code:"N9.6.2",name:"桦树糖浆和糖",cat:"N",path:"N9 食物 > 基于树汁的食物 > 桦树糖浆和糖",examples:""},
+{code:"N9.7",name:"猎物",cat:"N",path:"N9 食物 > 猎物",examples:"鹿，兔子"},
+{code:"N9.8",name:"蜂蜜",cat:"N",path:"N9 食物 > 蜂蜜",examples:""},
+{code:"N10",name:"其他非木质林产品",cat:"N",path:"N10 其他非木质林产品",examples:""}
+];
+
+// ==================== PINYIN INDEX ====================
+const PY_DATA=DATA.map(d=>{
+  let py="";
+  try{py=pinyinPro.pinyin(d.name,{toneType:"none"}).replace(/\s+/g,"").toLowerCase()}catch(e){py=""}
+  let pyFull="";
+  try{pyFull=pinyinPro.pinyin(d.name,{pattern:"first",toneType:"none"}).replace(/\s+/g,"").toLowerCase()}catch(e){pyFull=""}
+  return{...d,py,pyFull};
+});
+
+// ==================== MATCHING ENGINE ====================
+function matchItem(name){
+  const q=name.trim().toLowerCase();
+  if(!q)return[];
+  const results=[];
+  // Detect if query is pinyin (all latin letters)
+  const isPinyin=/^[a-zA-Z]+$/.test(q);
+  PY_DATA.forEach(d=>{
+    let score=0;
+    const nl=d.name.toLowerCase();
+    const pl=d.path.toLowerCase();
+    const el=d.examples.toLowerCase();
+    if(nl===q)score=100;
+    else if(nl.includes(q))score=80;
+    else if(pl.includes(q))score=60;
+    else if(el.includes(q))score=50;
+    else{
+      let qi=0;for(let ti=0;ti<nl.length&&qi<q.length;ti++){if(nl[ti]===q[qi])qi++}
+      if(qi===q.length)score=30;
+    }
+    // Pinyin matching (lower priority than Chinese exact/name match)
+    if(score===0&&isPinyin){
+      if(d.py===q)score=75;        // full pinyin exact match
+      else if(d.py.includes(q))score=65; // full pinyin contains
+      else if(d.pyFull===q)score=55;    // first letter exact match
+      else if(d.pyFull.includes(q))score=45; // first letter contains
+      else{
+        // fuzzy pinyin: check if all chars of query appear in order in full pinyin
+        let qi=0;for(let ti=0;ti<d.py.length&&qi<q.length;ti++){if(d.py[ti]===q[qi])qi++}
+        if(qi===q.length)score=35;
+      }
+    }
+    if(score>0)results.push({code:d.code,name:d.name,score});
+  });
+  results.sort((a,b)=>b.score-a.score);
+  return results.slice(0,5);
+}
+
+function scoreLabel(s){
+  if(s>=80)return{text:"精确",cls:"exact"};
+  if(s>=50)return{text:"相关",cls:"related"};
+  return{text:"模糊",cls:"fuzzy"};
+}
+
+// ==================== BATCH QUERY STATE ====================
+let products=[]; // [{id, name, mats:[{id,name}]}]
+let nextId=1;
+
+function addProduct(name,mats){
+  const id=nextId++;
+  products.push({id,name:name||"",mats:mats||[]});
+  renderProducts();
+  return id;
+}
+
+function removeProduct(pid){
+  products=products.filter(p=>p.id!==pid);
+  renderProducts();
+}
+
+function addMatToProduct(pid,name){
+  const p=products.find(p=>p.id===pid);
+  if(p){
+    p.mats.push({id:Date.now(),name:name||""});
+    renderProducts();
+  }
+}
+
+function removeMatFromProduct(pid,mid){
+  const p=products.find(p=>p.id===pid);
+  if(p){p.mats=p.mats.filter(m=>m.id!==mid);renderProducts()}
+}
+
+function updateProdName(pid,name){
+  const p=products.find(p=>p.id===pid);
+  if(p)p.name=name;
+}
+
+function updateMatName(pid,mid,name){
+  const p=products.find(p=>p.id===pid);
+  if(p){
+    const m=p.mats.find(m=>m.id===mid);
+    if(m)m.name=name;
+  }
+}
+
+function renderProducts(){
+  const container=document.getElementById("productList");
+  let html="";
+  products.forEach((p,i)=>{
+    html+=`<div class="prod-card" id="prod_${p.id}">
+      <div class="prod-card-top">
+        <span class="prod-num">${i+1}</span>
+        <input type="text" class="prod-name-input" placeholder="输入产品名称，如：床、桌子、刨花板..." value="${escHtml(p.name)}" oninput="updateProdName(${p.id},this.value)">
+        <button class="btn-del-prod" onclick="removeProduct(${p.id})" title="删除此产品">&times;</button>
+      </div>
+      <div class="mat-row" id="matRow_${p.id}">`;
+    p.mats.forEach(m=>{
+      html+=`<span class="mat-tag" id="matTag_${m.id}">
+        <input type="text" value="${escHtml(m.name)}" placeholder="原材料" oninput="updateMatName(${p.id},${m.id},this.value)">
+        <span class="del" onclick="removeMatFromProduct(${p.id},${m.id})">&times;</span>
+      </span>`;
+    });
+    html+=`</div>
+      <button class="btn-add-mat2" onclick="addMatToProduct(${p.id},'')">+ 添加原材料</button>
+    </div>`;
+  });
+  container.innerHTML=html;
+  // Focus first empty product name if exists
+  const firstEmpty=container.querySelector('.prod-name-input:not([value])');
+  if(firstEmpty)firstEmpty.focus();
+}
+
+function escHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+function clearAll(){
+  products=[];
+  nextId=1;
+  renderProducts();
+  document.getElementById("resultsCard").style.display="none";
+}
+
+// ==================== QUERY LOGIC ====================
+function doQuery(){
+  const validProds=products.filter(p=>p.name.trim()||p.mats.some(m=>m.name.trim()));
+  if(validProds.length===0){showToast("请至少添加一个产品名称");return;}
+  const results=[];
+  let totalMats=0,matched=0;
+  validProds.forEach(p=>{
+    const itemResults={prod:p.name.trim()||"(未命名)",mats:[]};
+    const validMats=p.mats.filter(m=>m.name.trim());
+    totalMats+=validMats.length;
+    if(validMats.length===0){
+      itemResults.mats.push({name:"—",matches:[]});
+    }else{
+      validMats.forEach(m=>{
+        const matches=matchItem(m.name.trim());
+        if(matches.length>0)matched++;
+        itemResults.mats.push({name:m.name.trim(),matches});
+      });
+    }
+    results.push(itemResults);
+  });
+
+  // Render
+  const resultsCard=document.getElementById("resultsCard");
+  resultsCard.style.display="block";
+  resultsCard.scrollIntoView({behavior:"smooth",block:"start"});
+
+  const summaryBar=document.getElementById("summaryBar");
+  summaryBar.innerHTML=`
+    <span>&#128203; 产品: ${validProds.length} 个</span>
+    <span>&#128230; 原材料: ${totalMats} 个</span>
+    <span>&#10004; 匹配成功: ${matched} 个</span>
+  `;
+
+  const resultList=document.getElementById("resultList");
+  if(results.length===0){
+    resultList.innerHTML=`<div class="empty-state"><div class="icon">&#128269;</div><h3>未找到匹配结果</h3><p>请尝试调整关键词</p></div>`;
+    return;
+  }
+  let html="";
+  results.forEach((rp,pi)=>{
+    html+=`<div class="result-prod-group">
+      <div class="result-prod-header">
+        <span class="result-prod-num">${pi+1}</span>
+        <span class="result-prod-name">${escHtml(rp.prod)}</span>
+      </div>
+      <div class="result-mat-rows">`;
+    rp.mats.forEach(rm=>{
+      html+=`<div class="result-mat-row">
+        <span class="result-mat-name" title="${escHtml(rm.name)}">${escHtml(rm.name)}</span>
+        <span class="result-arrow">&#10132;</span>
+        <div class="result-match-tags">`;
+      if(rm.matches.length>0){
+        rm.matches.forEach(m=>{
+          const lbl=scoreLabel(m.score);
+          html+=`<span class="match-tag"><span class="match-code">${m.code}</span><span class="match-name">${escHtml(m.name)}</span><span class="match-score ${lbl.cls}">${lbl.text}</span></span>`;
+        });
+      }else{
+        html+=`<span class="no-match-tag">未匹配到分类代码</span>`;
+      }
+      html+=`</div></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  resultList.innerHTML=html;
+}
+
+// ==================== SEARCH SECTION ====================
+function fuzzyMatch(text,query,pyText,pyFullText){
+  if(!query)return true;
+  const q=query.toLowerCase().trim();
+  const t=text.toLowerCase();
+  if(t.includes(q))return true;
+  let qi=0;for(let ti=0;ti<t.length&&qi<q.length;ti++){if(t[ti]===q[qi])qi++}
+  if(qi===q.length)return true;
+  // Pinyin matching
+  if(pyText&&pyText.includes(q))return true;
+  if(pyFullText&&pyFullText.includes(q))return true;
+  if(pyText){
+    qi=0;for(let ti=0;ti<pyText.length&&qi<q.length;ti++){if(pyText[ti]===q[qi])qi++}
+    if(qi===q.length)return true;
+  }
+  return false;
+}
+function doSearch(){
+  const q=document.getElementById("searchInput").value.trim();
+  const stats=document.getElementById("searchStats");
+  const list=document.getElementById("searchResults");
+  if(!q){stats.textContent="";list.innerHTML="";return;}
+  const filtered=PY_DATA.filter(d=>fuzzyMatch(d.name,q,d.py,d.pyFull)||fuzzyMatch(d.code,q)||fuzzyMatch(d.path,q)||fuzzyMatch(d.examples,q));
+  filtered.sort((a,b)=>{
+    const ae=a.name.toLowerCase().includes(q.toLowerCase())?0:1;
+    const be=b.name.toLowerCase().includes(q.toLowerCase())?0:1;
+    if(ae!==be)return ae-be;
+    const ac=a.code.toLowerCase().includes(q.toLowerCase())?0:1;
+    const bc=b.code.toLowerCase().includes(q.toLowerCase())?0:1;
+    if(ac!==bc)return ac-bc;
+    return 0;
+  });
+  stats.textContent=`在 FSC 分类库中找到 ${filtered.length} 个匹配结果`;
+  if(filtered.length===0){list.innerHTML="";return;}
+  let html="";
+  filtered.slice(0,30).forEach(d=>{
+    const catColors={W:"#2f855a",P:"#2b6cb0",N:"#d69e2e"};
+    const bgColors={W:"#f0fff4",P:"#ebf4ff",N:"#fffff0"};
+    const color=catColors[d.cat]||"#4a5568";
+    const bg=bgColors[d.cat]||"#f7fafc";
+    html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;margin-bottom:4px;background:#fff;border:1px solid #e2e8f0;transition:all .2s" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='#e2e8f0'">
+      <span style="background:${bg};color:${color};font-weight:800;font-size:13px;padding:4px 10px;border-radius:6px;font-family:monospace;flex-shrink:0">${d.code}</span>
+      <span style="font-size:13px;font-weight:600;color:#2d3748">${escHtml(d.name)}</span>
+    </div>`;
+  });
+  if(filtered.length>30)html+=`<div style="text-align:center;color:#a0aec0;font-size:12px;padding:8px">还有 ${filtered.length-30} 个结果，请使用更精确的关键词</div>`;
+  list.innerHTML=html;
+}
+
+// ==================== COPY & EXPORT ====================
+let queryResultsData=[];
+function copyResults(){
+  const rp=document.getElementById("resultList");
+  if(!rp.innerHTML){showToast("暂无结果可复制");return;}
+  const lines=["FSC 产品分类代码匹配结果","=".repeat(40)];
+  queryResultsData.forEach((r,i)=>{
+    lines.push(`${i+1}. ${r.prod}`);
+    r.mats.forEach(m=>{
+      const codes=m.matches.map(x=>`${x.code} ${x.name}`).join(" | ");
+      lines.push(`   ${m.name} => ${codes||"(未匹配)"}`);
+    });
+    lines.push("");
+  });
+  const text=lines.join("\n");
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById("btnCopy");
+    btn.textContent="已复制!";
+    btn.classList.add("copied");
+    setTimeout(()=>{btn.textContent="复制结果";btn.classList.remove("copied")},2000);
+    showToast("结果已复制到剪贴板");
+  }).catch(()=>showToast("复制失败，请手动选择"));
+}
+
+function exportResults(){
+  if(queryResultsData.length===0){showToast("暂无结果可导出");return;}
+  // Build CSV
+  const rows=[["序号","产品名称","原材料","匹配代码","分类名称","匹配精度"]];
+  queryResultsData.forEach((r,i)=>{
+    if(r.mats.length===0||(r.mats.length===1&&r.mats[0].name==="—")){
+      rows.push([i+1,r.prod,"—","—","—","—"]);
+    }else{
+      r.mats.forEach(m=>{
+        if(m.matches.length===0){
+          rows.push([i+1,r.prod,m.name,"—","—","未匹配"]);
+        }else{
+          m.matches.forEach(x=>{
+            const lbl=scoreLabel(x.score);
+            rows.push([i+1,r.prod,m.name,x.code,x.name,lbl.text]);
+          });
+        }
+      });
+    }
+  });
+  const csv="\uFEFF"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`FSC分类匹配结果_${new Date().toLocaleDateString("zh-CN").replace(/\//g,"-")}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Excel 文件已下载");
+}
+
+// Hook doQuery to save data for export
+const _doQuery=doQuery;
+doQuery=function(){
+  queryResultsData=[];
+  _doQuery();
+  // Collect data
+  products.forEach(p=>{
+    if(!p.name.trim()&&!p.mats.some(m=>m.name.trim()))return;
+    const mats=[];
+    p.mats.forEach(m=>{
+      if(!m.name.trim())return;
+      mats.push({name:m.name.trim(),matches:matchItem(m.name.trim())});
+    });
+    queryResultsData.push({prod:p.name.trim()||"(未命名)",mats});
+  });
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2500);
+}
+
+// ==================== INIT ====================
+// Add 2 default products
+addProduct();
+addProduct();
+
+document.getElementById("searchInput").addEventListener("keydown",e=>{if(e.key==="Escape"){e.target.value="";doSearch()}});
+</script>
+</body>
+</html>
